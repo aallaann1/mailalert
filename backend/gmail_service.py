@@ -42,8 +42,16 @@ def setup_watch(user: models.User, credentials, db):
     expiration_dt = datetime.datetime.utcfromtimestamp(expiration_ms / 1000.0)
     
     user.watch_expiration = expiration_dt
+    
+    try:
+        profile = service.users().getProfile(userId='me').execute()
+        current_history_id = str(profile.get('historyId'))
+        user.history_id = current_history_id
+    except Exception as e:
+        print(f"Erreur récupération historyId initial: {e}")
+
     db.commit()
-    print(f"Watch configuré avec succès pour {user.email}. Expiration: {expiration_dt}")
+    print(f"Watch configuré avec succès pour {user.email}. Expiration: {expiration_dt}, HistoryId initial: {user.history_id}")
 
 def fetch_and_analyze_emails(user: models.User, history_id: str, db):
     try:
@@ -56,32 +64,39 @@ def fetch_and_analyze_emails(user: models.User, history_id: str, db):
     matched_emails = []
 
     # Récupérer la liste des modifications depuis le dernier historyId connu
-    start_history_id = user.history_id or history_id
+    start_history_id = user.history_id
     
     try:
-        history_list = service.users().history().list(
-            userId='me',
-            startHistoryId=start_history_id,
-            historyTypes=['messageAdded']
-        ).execute()
-        
-        # Mettre à jour le dernier historyId connu
+        message_ids = []
+        if start_history_id:
+            history_list = service.users().history().list(
+                userId='me',
+                startHistoryId=start_history_id,
+                historyTypes=['messageAdded']
+            ).execute()
+            
+            histories = history_list.get('history', [])
+            print(f"DEBUG: Fetched history from {start_history_id}. Found {len(histories)} history records.")
+            for h in histories:
+                messages_added = h.get('messageAdded', [])
+                for msg_item in messages_added:
+                    msg = msg_item.get('message', {})
+                    label_ids = msg.get('labelIds', [])
+                    print(f"DEBUG: Message added {msg.get('id')} with labels {label_ids}")
+                    if 'INBOX' in label_ids:
+                        message_ids.append(msg.get('id'))
+        else:
+            # Premier webhook reçu (pas de history_id précédent)
+            messages_res = service.users().messages().list(userId='me', maxResults=1, q="label:INBOX").execute()
+            message_ids = [m.get('id') for m in messages_res.get('messages', [])]
+
+        # Mettre à jour le dernier historyId connu pour les prochaines fois
         user.history_id = history_id
         db.commit()
-        
-        histories = history_list.get('history', [])
-        message_ids = []
-        for h in histories:
-            messages_added = h.get('messageAdded', [])
-            for msg_item in messages_added:
-                msg = msg_item.get('message', {})
-                if 'INBOX' in msg.get('labelIds', []):
-                    message_ids.append(msg.get('id'))
-        
-        # Removed fallback logic because it causes duplicate pings on non-messageAdded events.
 
         # Récupérer les détails de chaque message et appliquer les groupes de règles
         webhooks = user.webhooks
+        print(f"DEBUG: Found {len(message_ids)} messages to process: {message_ids}")
         for msg_id in set(message_ids):
             msg_detail = service.users().messages().get(userId='me', id=msg_id, format='full').execute()
             
@@ -95,6 +110,8 @@ def fetch_and_analyze_emails(user: models.User, history_id: str, db):
                     sender = h.get('value')
                 elif h.get('name') == 'Subject':
                     subject = h.get('value')
+            
+            print(f"DEBUG: Message {msg_id} - From: {sender}, Subject: {subject}")
             
             # Extraction récursive du corps et des pièces jointes
             attachments = []
@@ -120,8 +137,8 @@ def fetch_and_analyze_emails(user: models.User, history_id: str, db):
                         except Exception:
                             pass
                 
-                for subpart in part.get('parts', []):
-                    walk_parts(subpart)
+            walk_parts(msg_detail.get('payload', {}))
+            body_content = "\n".join(body_texts)
 
             thread_id = msg_detail.get('threadId', msg_id)
             gmail_url = f"https://mail.google.com/mail/u/0/#inbox/{thread_id}"
@@ -134,6 +151,8 @@ def fetch_and_analyze_emails(user: models.User, history_id: str, db):
                 'gmail_url': gmail_url,
                 'attachments': [a['filename'] for a in attachments]
             }
+
+            print(f"DEBUG: Processing mail {msg_id} from {sender}")
 
             # Évaluation pour chaque webhook de l'utilisateur
             for wh in webhooks:
