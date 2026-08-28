@@ -78,11 +78,7 @@ def fetch_and_analyze_emails(user: models.User, history_id: str, db):
                 if 'INBOX' in msg.get('labelIds', []):
                     message_ids.append(msg.get('id'))
         
-        # S'il n'y a pas d'historique mais que nous avons un history_id poussé directement par le webhook
-        if not message_ids:
-            # Récupérer le dernier message reçu dans la boîte de réception
-            messages_res = service.users().messages().list(userId='me', maxResults=3, q="label:INBOX").execute()
-            message_ids = [m.get('id') for m in messages_res.get('messages', [])]
+        # Removed fallback logic because it causes duplicate pings on non-messageAdded events.
 
         # Récupérer les détails de chaque message et appliquer les groupes de règles
         webhooks = user.webhooks
