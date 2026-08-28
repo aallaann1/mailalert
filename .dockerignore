@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+node_modules
+dist
+.git
+.gitignore
+.github
+*.db
+*.sqlite3
+.env
+.env.local
+.DS_Store
+cloudflared.exe
