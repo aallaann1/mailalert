@@ -94,6 +94,7 @@ async def send_discord_ping(webhook_url: str, mail_info: dict, ping: bool = Fals
             print(f"Erreur d'envoi Discord Webhook: {e}")
 
 @router.post('/api/webhooks/gmail')
+@router.post('/webhook/gmail')
 async def gmail_webhook(request: Request, db: Session = Depends(database.get_db)):
     body = await request.json()
     message = body.get('message', {})
