@@ -78,7 +78,7 @@ def fetch_and_analyze_emails(user: models.User, history_id: str, db):
             histories = history_list.get('history', [])
             print(f"DEBUG: Fetched history from {start_history_id}. Found {len(histories)} history records.")
             for h in histories:
-                messages_added = h.get('messageAdded', [])
+                messages_added = h.get('messagesAdded', [])
                 for msg_item in messages_added:
                     msg = msg_item.get('message', {})
                     label_ids = msg.get('labelIds', [])
