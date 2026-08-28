@@ -9,7 +9,7 @@ export const TermsOfService: React.FC<Props> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 py-4 sm:px-8 flex justify-between items-center shadow-xs">
-        <div className="flex items-center gap-3">
+        <button onClick={onBack} className="flex items-center gap-3 text-left hover:opacity-80 transition cursor-pointer">
           <div className="bg-blue-600 text-white p-2 rounded-xl">
             <FileText size={20} />
           </div>
@@ -17,7 +17,7 @@ export const TermsOfService: React.FC<Props> = ({ onBack }) => {
             <h1 className="text-lg font-bold text-slate-900 leading-tight">MailAlert</h1>
             <p className="text-xs text-slate-500">Conditions Générales d'Utilisation</p>
           </div>
-        </div>
+        </button>
         <button
           onClick={onBack}
           className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2 px-4 rounded-xl transition flex items-center gap-1.5"
@@ -27,7 +27,7 @@ export const TermsOfService: React.FC<Props> = ({ onBack }) => {
         </button>
       </header>
 
-      <main className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8 my-6 flex-1 bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <main className="max-w-4xl mx-4 sm:mx-auto p-5 sm:p-8 space-y-8 my-6 flex-1 bg-white rounded-2xl border border-slate-200 shadow-xs">
         <div className="border-b border-slate-100 pb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Conditions Générales d'Utilisation (CGU)</h2>
           <p className="text-sm text-slate-500 mt-2">Dernière mise à jour : 28 août 2026</p>

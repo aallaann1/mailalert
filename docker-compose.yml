@@ -4,9 +4,12 @@ services:
     container_name: mailalert-frontend
     restart: always
     ports:
-      - 3000:3000
+      - 3005:3000
     env_file:
       - .env
+    environment:
+      # L'URL de l'API Backend pour le Frontend
+      - VITE_API_URL=http://192.168.1.139:8005
     depends_on:
       - backend
 
@@ -15,7 +18,7 @@ services:
     container_name: mailalert-backend
     restart: always
     ports:
-      - 8000:8000
+      - 8005:8000
     env_file:
       - .env
     volumes:

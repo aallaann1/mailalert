@@ -4,7 +4,15 @@ import axios from 'axios'
 import { PrivacyPolicy } from './PrivacyPolicy'
 import { TermsOfService } from './TermsOfService'
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || (typeof window !== 'undefined' && window.location.port === '5173' 
+declare global {
+  interface Window {
+    ENV?: {
+      VITE_API_URL?: string;
+    }
+  }
+}
+
+const API_BASE_URL = (window.ENV?.VITE_API_URL as string) || (import.meta.env.VITE_API_URL as string) || (typeof window !== 'undefined' && window.location.port === '5173' 
   ? 'http://localhost:8000' 
   : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000'))
 
@@ -339,10 +347,13 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 py-4 sm:px-8 flex justify-between items-center shadow-xs">
-        <div className="flex items-center gap-3">
+        <button 
+          onClick={() => { window.location.hash = ''; window.scrollTo(0, 0); }} 
+          className="flex items-center gap-3 text-left hover:opacity-80 transition cursor-pointer"
+        >
           <div className="bg-blue-600 text-white p-2 rounded-xl">
             <Bell size={20} />
           </div>
@@ -350,7 +361,7 @@ function App() {
             <h1 className="text-lg font-bold text-slate-900 leading-tight">MailAlert</h1>
             <p className="text-xs text-slate-500">Filtrage multi-webhooks</p>
           </div>
-        </div>
+        </button>
         <div className="flex items-center gap-4">
           <span className="text-xs sm:text-sm text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full font-medium">{user.email}</span>
           <button 
@@ -363,7 +374,7 @@ function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <main className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 flex-1 w-full">
         {/* Discord User ID Profile Card */}
         <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -378,18 +389,18 @@ function App() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <input
                 type="text"
                 placeholder="ex: 345678912345678901"
                 value={discordId}
                 onChange={(e) => setDiscordId(e.target.value)}
-                className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-56"
+                className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-56"
               />
               <button
                 onClick={handleSaveDiscordId}
                 disabled={isSavingDiscordId}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 px-4 rounded-xl transition shadow-xs disabled:opacity-50 shrink-0"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition shadow-xs disabled:opacity-50 shrink-0 w-full sm:w-auto"
               >
                 {isSavingDiscordId ? 'Sauvegarde...' : saveSuccess ? '✓ Enregistré !' : 'Enregistrer'}
               </button>
@@ -407,7 +418,7 @@ function App() {
           </div>
           <button
             onClick={() => setShowAddWebhook(!showAddWebhook)}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-xs shrink-0"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-xs shrink-0"
           >
             <Plus size={18} />
             Ajouter un Webhook
@@ -648,7 +659,7 @@ function App() {
                                   }
                                 })
                               }}
-                              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500 sm:w-44"
+                              className="w-full sm:w-44 bg-white border border-slate-300 rounded-lg px-2.5 py-2 sm:py-1.5 text-sm sm:text-xs outline-none focus:ring-2 focus:ring-blue-500"
                             >
                               <option value="sender">Expéditeur contient</option>
                               <option value="subject">Objet contient</option>
@@ -658,7 +669,7 @@ function App() {
 
                             {/* Conditional Input based on rule type */}
                             {(groupRuleInputs[group.id]?.type || 'sender') === 'attachment' ? (
-                              <div className="flex-1 flex gap-2">
+                              <div className="flex-1 flex flex-col sm:flex-row gap-2 w-full">
                                 <select
                                   value={groupRuleInputs[group.id]?.value || 'any'}
                                   onChange={(e) =>
@@ -671,7 +682,7 @@ function App() {
                                       }
                                     })
                                   }
-                                  className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full sm:flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 sm:py-1.5 text-sm sm:text-xs outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                   <option value="any">Toutes (n'importe quel type)</option>
                                   <option value="pdf">Document PDF (.pdf)</option>
@@ -698,7 +709,7 @@ function App() {
                                         }
                                       })
                                     }
-                                    className="w-32 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full sm:w-32 bg-white border border-slate-300 rounded-lg px-3 py-2 sm:py-1.5 text-sm sm:text-xs outline-none focus:ring-2 focus:ring-blue-500"
                                   />
                                 )}
                               </div>
@@ -722,15 +733,15 @@ function App() {
                                     }
                                   })
                                 }
-                                className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full sm:flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 sm:py-1.5 text-sm sm:text-xs outline-none focus:ring-2 focus:ring-blue-500"
                               />
                             )}
 
                             <button
                               type="submit"
-                              className="bg-slate-800 hover:bg-slate-900 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1 shrink-0"
+                              className="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-medium px-4 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs transition flex items-center justify-center gap-1 shrink-0"
                             >
-                              <Plus size={14} />
+                              <Plus size={16} className="sm:w-3.5 sm:h-3.5" />
                               Ajouter condition (ET)
                             </button>
                           </form>
